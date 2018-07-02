@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -25,6 +24,7 @@ func checkErr(err error) {
 		os.Exit(1)
 	}
 }
+
 func main() {
 	intervals := os.Args[1:]
 	if len(intervals) < 1 {
@@ -32,31 +32,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	// avoid too much error handling for index access
-	defer func() {
-		if r := recover(); r != nil {
-			checkErr(errors.New("panicked: " + fmt.Sprintf("%+v", r)))
-		}
-	}()
-
 	var sum time.Duration
 	for _, interval := range intervals {
 		i := strings.Split(interval, "-")
-		h1 := strings.Split(i[0], ":")
-		h2 := strings.Split(i[1], ":")
+		if len(i) < 2 {
+			checkErr(errors.New("bad interval"))
+		}
 
-		h1s, err := strconv.Atoi(h1[0])
+		t1, err := time.Parse("15:04", i[0])
 		checkErr(err)
-		h1e, err := strconv.Atoi(h1[1])
+		t2, err := time.Parse("15:04", i[1])
 		checkErr(err)
-
-		h2s, err := strconv.Atoi(h2[0])
-		checkErr(err)
-		h2e, err := strconv.Atoi(h2[1])
-		checkErr(err)
-
-		t1 := time.Date(0, 0, 0, h1s, h1e, 0, 0, time.UTC)
-		t2 := time.Date(0, 0, 0, h2s, h2e, 0, 0, time.UTC)
 
 		diff := t2.Sub(t1)
 		fmt.Printf("%s-%s: %v\n", t1.Format("15:04"),
